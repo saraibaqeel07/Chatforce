@@ -1,732 +1,345 @@
-
+import React, { useState } from "react";
 import {
-
-    Box,
-
-    CardMedia,
-    Button,
-    IconButton,
-    CircularProgress,
-    Paper,
-    TextField,
-    InputAdornment,
-    Typography,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  InputAdornment,
+  IconButton,
+  Link,
+  Paper,
+  Container,
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
 } from "@mui/material";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-
-
-import { useForm } from "react-hook-form";
-
-import { Visibility, VisibilityOff } from "@mui/icons-material";
-
-import { useNavigate } from "react-router-dom";
-// import AuthServices from "../../apis/auth/AuthServices";
-
-import { useContext, useEffect, useState } from "react";
-
-import ApiServices from "../../../services/Apis";
-import OTPInput from "react-otp-input";
-import { showErrorToast, showSuccessToast } from "../../../components/Toaster";
-import { AuthContext } from "../../../Context/AuthContext";
+import { Visibility, VisibilityOff, CheckCircle } from "@mui/icons-material";
 import { Images } from "../../../assets/images";
 
+// Custom theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#40E0D0", // Teal color for primary elements
+    },
+    secondary: {
+      main: "#4169E1", // Royal blue for secondary elements
+    },
+    background: {
+      default: "#363B59", // Dark purple/navy background
+    },
+    text: {
+      primary: "#FFFFFF",
+      secondary: "#CCCCCC",
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  },
+  components: {
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-root": {
+            "& fieldset": {
+              borderColor: "#6B7280",
+            },
+            "&:hover fieldset": {
+              borderColor: "#40E0D0",
+            },
+            "&.Mui-focused fieldset": {
+              borderColor: "#40E0D0",
+            },
+          },
+          "& .MuiInputLabel-root": {
+            color: "#CCCCCC",
+          },
+          "& .MuiInputBase-input": {
+            color: "#FFFFFF",
+          },
+        },
+      },
+    },
+  },
+});
 
+export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isEmailValid, setIsEmailValid] = useState(true);
+ 
 
+  const handleClickShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
-function Login() {
-    const [isVisible, setIsVisible] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
-    const [emailConfirmation, setEmailConfirmation] = useState(false)
-    const [emailError, setEmailError] = useState(false)
-    const [otpError, setOtpError] = useState(false)
-    const [otpEnable, setOtpEnable] = useState(false);
-    const [loginState, setLoginState] = useState(true)
-    const [otp, setOtp] = useState('')
-    const [otpToken, setOtpToken] = useState(false)
-    const [updatePassword, setUpdatePassword] = useState(false)
-    const [confirmPassword, setConfirmPassword] = useState(false)
-    const [showPassword, setShowPassword] = useState(false);
-    const [showPassword2, setShowPassword2] = useState(false);
-    const [newloader, setNewloader] = useState(false)
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
 
-
-    const { user, setUser } = useContext(AuthContext);
-    const {
-        register,
-        handleSubmit,
-        watch,
-        formState: { errors },
-    } = useForm();
-
-    const emailValue = watch("email");
-    const passwordValue = watch("password");
-    const {
-        register: register3,
-        handleSubmit: handleSubmit3,
-        setValue: setValue3,
-        getValues: getValues3,
-        reset: reset3,
-        formState: { errors: errors3 },
-    } = useForm();
-
-    const {
-        register: register4,
-        handleSubmit: handleSubmit4,
-        setValue: setValue4,
-        getValues: getValues4,
-        reset: reset4,
-        formState: { errors: errors4 },
-    } = useForm();
-
-    const [timer, setTimer] = useState(10);
-
-    useEffect(() => {
-        let interval;
-        if (timer > 0) {
-            interval = setInterval(() => {
-                setTimer((prev) => prev - 1);
-            }, 1000);
-        } else {
-            clearInterval(interval);
-        }
-        return () => clearInterval(interval);
-    }, [timer]);
-
-
-    const SendOtp = async (val) => {
-        if (val != 'resend') {
-            setIsLoading(true)
-        }
-
-
-        setTimer(60);
-        try {
-            let obj = {
-                email: getValues3('email')
-            };
-
-            const data = await ApiServices.SendOtp(obj);
-            console.log(data);
-            if (data.responseCode == 206) {
-
-                setEmailConfirmation(false)
-                setLoginState(false)
-                setOtpEnable(true)
-                setEmailError(false)
-            }
-        } catch (error) {
-
-            setEmailError(true)
-        }
-        finally {
-            setIsLoading(false)
-            setNewloader(false)
-        }
-    }
-
-    const SubmitOTP = async (val) => {
-
-        setIsLoading(true)
-
-
-
-        try {
-            let obj = {
-                email: getValues3('email'),
-                otp: otp,
-            };
-
-            const data = await ApiServices.SendOtp(obj);
-            console.log(data?.data, 'tesetttt');
-            if (data.responseCode == 206) {
-
-                setOtpToken(data?.data?.otp_token)
-                setUpdatePassword(true)
-                setEmailConfirmation(false)
-                setOtpEnable(false)
-                setConfirmPassword(true)
-                // Register(sendData, data?.data?.otp_token);
-            }
-        } catch (error) {
-            setOtpError(true)
-        }
-        finally {
-            setIsLoading(false)
-
-        }
-    };
-
-    const UpdatePassword = async (sendData, result) => {
-        setIsLoading(true)
-        console.log(otpToken, "otpToken2");
-        try {
-            let obj = {
-                otp_token: otpToken,
-                email: getValues3('email'),
-                password: getValues4('password'),
-                confirm_password: getValues4('confirmPassword'),
-            };
-
-            const data = await ApiServices.SendOtp(obj);
-            console.log(data);
-            if (data.responseCode == 200) {
-                setOtp('')
-
-                reset4()
-                setConfirmPassword(false)
-                setLoginState(true)
-
-
-            }
-        } catch (error) {
-            setOtpError(true)
-        }
-        finally {
-            setIsLoading(false)
-        }
-    };
-    //   const { userLogin } = useAuth();
-    const navigate = useNavigate();
-
-    const submit = async (formData) => {
-        setIsLoading(true);
-        const obj = {
-            email: formData.email,
-            password: formData.password,
-        };
-        try {
-            const result = await ApiServices.Login(obj);
-            if (result.responseCode == 200) {
-                // userLogin(result.data);
-
-
-                setUser(result?.data);
-                localStorage.setItem('user', JSON.stringify(result?.data))
-                showSuccessToast(result.message);
-                navigate("/dashboard");
-            }
-        } catch (error) {
-            showErrorToast(error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <Box
-            sx={{
-                height: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundImage: `url(${Images?.loginBg})`, // Corrected syntax
-                backgroundSize: "cover", // Ensures the image covers the entire background
-                backgroundPosition: "center", // Centers the image
-                position: "relative", // Required for absolute positioning of pseudo-element
-                "&::before": {
-                    content: '""',
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    backgroundColor: "rgba(239, 246, 255, 0.5)", // Semi-transparent overlay
-                    zIndex: 1,
-                },
-            }}
-
-
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          bgcolor: "background.default",
+          position: "relative",
+          p: 3,
+        }}
+      >
+        <Paper
+          elevation={10}
+          sx={{
+            width: "100%",
+            maxWidth: 1000,
+            borderRadius: 4,
+            p: 4,
+            position: "relative",
+            zIndex: 1,
+            bgcolor: "rgba(54, 59, 89, 0.9)",
+            backdropFilter: "blur(10px)",
+          }}
         >
-            <Paper
-                elevation={3}
-                sx={{
-                    position: "relative",
-                    // border: "2px solid #0052a8",
-                    zIndex: 2, // Ensure it appears above the overlay
-                    padding: { xs: "20px", sm: "30px", md: "40px" },
-                    borderRadius: "16px",
-                    width: { xs: "80%", sm: "30%", md: "25%" },
-                    textAlign: "center",
-                    backgroundColor: "white",
-                    boxShadow: " rgba(0, 0, 0, 0.35) 0px 5px 15px", // Corrected shadow
-
-                }}
-
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              top: 0,
+              left: "-5px",
+              position: "absolute",
+              zIndex: -1,
+            }}
+          >
+            <img src={Images.leaves} width={"250px"} />
+          </Box>
+          <Container maxWidth="xs">
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                mb: 4,
+              }}
             >
-                <Box sx={{ display: 'flex', justifyContent: "center", mb: 4, }}>
-                    <CardMedia
-                        component={"img"}
-                        src={Images.logo}
-                        alt={"logo"}
-                        sx={{
-                            width: '120px',
-                            borderRadius: "50%",
-                            objectFit: "contain",
-                        }}
-                    />
-                </Box>
+              <img src={Images.logo} width={"200px"} />
+              <Typography
+                variant="subtitle1"
+                color="text.secondary"
+                sx={{ mt: "5px", fontSize: "12px" }}
+              >
+                Fast & Easy Product Management
+              </Typography>
+            </Box>
 
-                {loginState && <form onSubmit={handleSubmit(submit)}>
+            <Typography
+              variant="h4"
+              component="h1"
+              align="center"
+              sx={{ mb: 4, fontWeight: "medium", fontSize: "22px" }}
+            >
+              Welcome Back!
+            </Typography>
 
-                    <TextField
-                        label="Email"
-                        type="email"
-                        variant="outlined"
-                        fullWidth
-                        InputLabelProps={{ shrink: !!emailValue }}
-                        sx={{
-                            borderRadius: "12px",
-                            ".MuiOutlinedInput-root": {
-                              borderRadius: "12px",
-                              transition: "all 0.2s ease-in-out",
-                          
-                              // Default state
-                              "& fieldset": {
-                                border: "2px solid #e0e0e0",
-                              },
-                          
-                              // Hover state
-                              "&:hover fieldset": {
-                                border: "2px solid #0076bf",
-                              },
-                          
-                              // Focused state
-                              "&.Mui-focused fieldset": {
-                                border: "2px solid #0076bf",
-                              },
-                            },
-                          }}
-                          
-                        {...register("email", {
-                            required: "Email is required",
-                            pattern: {
-                                value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
-                                message: "Email is not valid",
-                            },
-                        })}
-                        error={!!errors.email}
-                        helperText={errors.email ? errors.email.message : ""}
-                    />
+            <Box component="form" sx={{ mt: 2 }}>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                Email
+              </Typography>
+              <TextField
+                fullWidth
+                onChange={(e) => setEmail(e.target.value)}
+                variant="outlined"
+                margin="normal"
+                sx={{
+                  mb: 2,
+                  fieldset: {
+                    outline: "none !important",
+                    border: "none !important",
+                    borderBottom: "2px solid white !important",
+                  },
+                  "& .MuiInputBase-input": {
+                    padding: "4px !important",
+                  },
+                }}
+                InputProps={{
+                  endAdornment: isEmailValid && (
+                    <InputAdornment position="end">
+                      <CheckCircle color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              {isEmailValid && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    mt: -2,
+                    mb: 2,
+                    display: "block",
+                    color: "primary.main",
+                  }}
+                >
+                  Perfect!
+                </Typography>
+              )}
 
-                    <TextField
-                        label="Password"
-                        type={isVisible ? "text" : "password"}
-                        variant="outlined"
-                        fullWidth
-                        InputLabelProps={{ shrink: !!passwordValue }}
-                        
-                          
-                        sx={{
-                            borderRadius: "12px",
-                            mt: 4,
-                            mb: 4,
-                            ".MuiOutlinedInput-root": {
-                                borderRadius: "12px",
-                                transition: "all 0.2s ease-in-out",
-                            
-                                // Default state
-                                "& fieldset": {
-                                  border: "2px solid #e0e0e0",
-                                },
-                            
-                                // Hover state
-                                "&:hover fieldset": {
-                                  border: "2px solid #0076bf",
-                                },
-                            
-                                // Focused state
-                                "&.Mui-focused fieldset": {
-                                  border: "2px solid #0076bf",
-                                },
-                              },
-                        }}
-                        {...register("password", { required: "Password is required" })}
-                        error={!!errors.password}
-                        helperText={errors.password ? errors.password.message : ""}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position="end">
-                                    <IconButton
-                                        onClick={() => setIsVisible(!isVisible)}
-                                        edge="end"
-                                        sx={{ ":focus": { outline: "none !important" } }}
-                                    >
-                                        {isVisible ? (
-                                            <VisibilityOff
-                                                sx={{ color: "#0F172A", fontSize: "20px" }}
-                                            />
-                                        ) : (
-                                            <Visibility sx={{ color: "#0F172A", fontSize: "20px" }} />
-                                        )}
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                    {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', cursor: 'pointer', fontSize: '13px', mb: 2 }}>
-                        <span style={{ textAlign: 'right' }} onClick={() => { setLoginState(false); setEmailConfirmation(true) }}>Forget Password?</span>
-                    </Box> */}
-                    <Button
-                        type={"submit"}
-                        fullWidth
-                        variant={"contained"}
-                        sx={{
-                            background: " #46aef5",
-                            color: 'white',
-                            borderRadius: "8px",
-                            textTransform: 'capitalize',
-                            p: "14px 40px",
-                            "&.Mui-disabled": {
-                                background: "#46aef5",
-                            },
-                        }}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <CircularProgress
-                                sx={{
-                                    "&.MuiCircularProgress-root": {
-                                        width: "26px !important",
-                                        height: "26px !important",
-                                    },
-                                    color: 'black',
-                                }}
-                            />
-                        ) : (
-                            "Login"
-                        )}
-                    </Button>
-                </form>}
+              <Typography
+                variant="body2"
+                sx={{ mt: 2, color: "text.secondary" }}
+              >
+                Password
+              </Typography>
+              <TextField
+                fullWidth
+                variant="outlined"
+                margin="normal"
+                type={showPassword ? "text" : "password"}
+                onChange={(e) => setPassword(e.target.value)}
+                sx={{
+                  fieldset: {
+                    outline: "none !important",
+                    border: "none !important",
+                    borderBottom: "2px solid white !important",
+                  },
+                  "& .MuiInputBase-input": {
+                    padding: "4px !important",
+                  },
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        // onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Typography
+                variant="caption"
+                sx={{ mt: -1, mb: 3, display: "block", color: "primary.main" }}
+              >
+                Your password is strong
+              </Typography>
 
-                {emailConfirmation && <form onSubmit={handleSubmit3(SendOtp)}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="primary"
+                size="large"
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  py: 1.5,
+                  textTransform: "none",
+                  fontSize: "1rem",
+                  fontWeight: "medium",
+                  borderRadius: 1,
+                }}
+              >
+                Sign in
+              </Button>
 
-                    <TextField
-                        label="Email"
-                        type="email"
-                        variant="outlined"
-                        fullWidth
-                        sx={{
-                            mb: 3,
-                            "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
-                            {
-                                borderColor: 'rgb(182, 182, 182)',
-                            },
-                            "& label.Mui-focused": {
-                                color: 'black',
-                            },
-                            fontSize: { xs: "0.9rem", sm: "1rem" }, // Responsive font size
-                        }}
-                        {...register3("email", {
-                            required: "Email is required",
-                            pattern: {
-                                value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
-                                message: "Email is not valid",
-                            },
-                        })}
-                        error={!!errors.email}
-                        helperText={errors.email ? errors.email.message : ""}
-                    />
+              <Box sx={{ textAlign: "center", mt: 1 }}>
+                <Box sx={{fontSize:"14px"}}>   Forget My Password</Box>
+               
+              
+              </Box>
+            </Box>
+          </Container>
+          <Box
+            sx={{
+              gap: 2,
+              position: "absolute",
+              right: -26,
+              borderRadius: "8px",
+            }}
+          >
+            <Button
+              variant="contained"
+              color="secondary"
+              sx={{
+                boxShadow: "rgb(61 79 140) 0px 3px 8px",
 
+                bgcolor: "hsl(225.99deg 100% 61.37%)",
+                borderRadius: "8px",
+                textTransform: "none",
+                px: 3,
+                py: 1,
+                fontSize: "12px",
+              }}
+            >
+              Request An Account
+            </Button>
+          </Box>
+          <Box
+            sx={{
+              gap: 2,
+              position: "absolute",
+              right: -26,
+              bottom: 37,
+              boxShadow: "rgb(251 251 251 / 24%) 0px 3px 8px",
+            }}
+          >
+            <Button
+              variant="outlined"
+              sx={{
+                borderRadius: 1,
+                textTransform: "none",
+                color: "black",
+                borderColor: "white",
+                fontSize: "12px",
+                bgcolor: "white",
+                "&:hover": {
+                  bgcolor: "white",
+                  borderColor: "black",
+                },
+              }}
+            >
+              Need Help?
+            </Button>
+          </Box>
 
-
-                    <Button
-                        type={"submit"}
-                        fullWidth
-                        variant={"contained"}
-                        sx={{
-                            background: " #18A5C3",
-                            color: 'white',
-                            borderRadius: "8px",
-                            textTransform: 'capitalize',
-                            p: "14px 40px",
-                            "&.Mui-disabled": {
-                                background: "#337DBD",
-                            },
-                        }}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <CircularProgress
-                                sx={{
-                                    "&.MuiCircularProgress-root": {
-                                        width: "26px !important",
-                                        height: "26px !important",
-                                    },
-                                    color: 'black',
-                                }}
-                            />
-                        ) : (
-                            "Submit"
-                        )}
-                    </Button>
-                </form>}
-                {
-                    otpEnable && (
-                        <>
-                            <Typography
-                                className="heading-font"
-                                variant="h5"
-                                mb={2}
-                                sx={{
-                                    fontWeight: 600,
-                                    textAlign: "center",
-                                    fontFamily: "Plus Jakarta Sans",
-                                }}
-                            >
-                                Enter OTP
-                            </Typography>
-                            <div className="otp-container">
-                                <OTPInput
-                                    value={otp}
-                                    onChange={setOtp}
-                                    numInputs={4}
-                                    renderSeparator={<span className="separator">-</span>}
-                                    renderInput={(props) => (
-                                        <input className="otp-input" {...props} />
-                                    )}
-                                />
-                            </div>{" "}
-                            {otpError && <span style={{ color: 'red', marginTop: '5px', fontSize: '12px' }}> &nbsp; OTP is Invalid </span>}
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "10px" }}>
-                                <span style={{ fontSize: "14px", color: "#6B7280" }}>
-                                    Resend OTP in {timer}s
-                                </span>
-                                <Button
-                                    variant="text"
-                                    disabled={timer > 0}
-                                    onClick={() => SendOtp('resend')}
-                                    sx={{
-                                        fontSize: "14px",
-                                        textTransform: "capitalize",
-                                        color: timer > 0 ? "#9CA3AF" : "#0EA5EA",
-                                    }}
-                                >
-                                    Resend
-                                </Button>
-                            </div>
-                            <Button
-                                onClick={() => SubmitOTP()}
-                                fullWidth
-                                variant={"contained"}
-                                sx={{
-                                    background: " #18A5C3",
-                                    color: 'white',
-                                    borderRadius: "8px",
-                                    textTransform: 'capitalize',
-                                    p: "14px 40px",
-                                    "&.Mui-disabled": {
-                                        background: "#337DBD",
-                                    },
-                                }}
-                                disabled={(isLoading) || otp.length != 4}
-                            >
-                                {(isLoading) ? (
-                                    <CircularProgress
-                                        sx={{
-                                            "&.MuiCircularProgress-root": {
-                                                width: "26px !important",
-                                                height: "26px !important",
-                                            },
-                                            color: 'black',
-                                        }}
-                                    />
-                                ) : (
-                                    "Submit"
-                                )}
-                            </Button>
-                        </>
-                    )
-                }
-
-                {confirmPassword && (
-                    <>
-                        <Box sx={{ width: "100%" }} component={'form'} onSubmit={handleSubmit4(UpdatePassword)}>
-                            <Typography
-                                className="heading-font"
-                                variant="h5"
-                                mb={2}
-                                sx={{
-                                    fontWeight: "bold",
-                                    textAlign: "center",
-                                    fontFamily: "Plus Jakarta Sans",
-
-                                }}
-                            >
-                                Reset Password
-                            </Typography>
-                            {/* Password Field */}
-                            <TextField
-                                fullWidth
-                                placeholder="Password"
-                                variant="outlined"
-
-                                type={showPassword ? "text" : "password"}
-                                {...register4("password", {
-                                    required: "Password is required",
-                                })}
-                                error={!!errors4.password}
-                                helperText={
-                                    errors4.password ? errors4.password.message : ""
-                                }
-                                InputProps={{
-
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                edge="end"
-                                                sx={{
-                                                    ":focus": {
-                                                        outline: "none !important"
-                                                    }
-                                                }}
-                                            >
-                                                {showPassword ? (
-                                                    <VisibilityIcon
-                                                        sx={{ color: "#0F172A", fontSize: "20px" }}
-                                                    />
-                                                ) : (
-                                                    <VisibilityOffIcon
-                                                        sx={{ color: "#0F172A", fontSize: "20px" }}
-                                                    />
-                                                )}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                    style: {
-                                        color: "#0F172A",
-                                        fontSize: "16px",
-                                        borderRadius: 8, // Rounded corners
-                                    },
-                                }}
-                                sx={{
-                                    my: 1,
-                                    backgroundColor: "#1E1E1E", // Dark background color
-                                    "& .MuiOutlinedInput-root": {
-                                        backgroundColor: "white",
-                                        "& fieldset": { borderColor: "rgb(182, 182, 182)" }, // Blue border
-                                        "&:hover fieldset": { borderColor: "rgb(182, 182, 182)" },
-                                        "&.Mui-focused fieldset": {
-                                            borderColor: "rgb(182, 182, 182)",
-                                        },
-                                    },
-                                    "&.MuiFormControl-fullWidth": {
-                                        background: "transparent !important",
-                                        borderRadius: '10px !important'
-                                    },
-                                    "& .MuiInputLabel-root": { color: "black" },
-                                    "& .MuiInputLabel-root.Mui-focused": { color: "black" },
-                                }}
-                            />
-
-                            {/* Confirm Password Field */}
-                            <TextField
-                                fullWidth
-                                placeholder="Confirm Password"
-
-                                variant="outlined"
-                                type={showPassword2 ? "text" : "password"}
-                                {...register4("confirmPassword", {
-                                    required: "Confirm Password is required",
-                                    validate: (value) =>
-                                        value === getValues4("password") ||
-                                        "Passwords do not match",
-                                })}
-                                error={!!errors4.confirmPassword}
-                                helperText={
-                                    errors4.confirmPassword
-                                        ? errors4.confirmPassword.message
-                                        : ""
-                                }
-                                InputProps={{
-
-                                    endAdornment: (
-                                        <InputAdornment position="end">
-                                            <IconButton
-                                                onClick={() => setShowPassword2(!showPassword2)}
-                                                edge="end"
-                                                sx={{
-                                                    ":focus": {
-                                                        outline: "none !important"
-                                                    }
-                                                }}
-                                            >
-                                                {showPassword2 ? (
-                                                    <VisibilityIcon
-                                                        sx={{ color: "#0F172A", fontSize: "20px" }}
-                                                    />
-                                                ) : (
-                                                    <VisibilityOffIcon
-                                                        sx={{ color: "#0F172A", fontSize: "20px" }}
-                                                    />
-                                                )}
-                                            </IconButton>
-                                        </InputAdornment>
-                                    ),
-                                    style: {
-                                        color: "#0F172A",
-                                        fontSize: "16px",
-                                        borderRadius: 8, // Rounded corners
-                                    },
-                                }}
-                                sx={{
-                                    my: 1,
-                                    backgroundColor: "#1E1E1E", // Dark background color
-                                    "& .MuiOutlinedInput-root": {
-                                        backgroundColor: "white",
-                                        "& fieldset": { borderColor: "rgb(182, 182, 182)" }, // Blue border
-                                        "&:hover fieldset": { borderColor: "rgb(182, 182, 182)" },
-                                        "&.Mui-focused fieldset": {
-                                            borderColor: "rgb(182, 182, 182)",
-                                        },
-                                    },
-                                    "&.MuiFormControl-fullWidth": {
-                                        background: "transparent !important",
-                                        borderRadius: '10px !important'
-                                    },
-                                    "& .MuiInputLabel-root": { color: "black" },
-                                    "& .MuiInputLabel-root.Mui-focused": { color: "black" },
-                                }}
-                            />
-
-                            <Button
-                                type={"submit"}
-                                fullWidth
-                                variant={"contained"}
-                                sx={{
-                                    background: " #18A5C3",
-                                    color: 'white',
-                                    borderRadius: "8px",
-                                    mt: 2,
-                                    textTransform: 'capitalize',
-                                    p: "14px 40px",
-                                    "&.Mui-disabled": {
-                                        background: "#337DBD",
-                                    },
-                                }}
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <CircularProgress
-                                        sx={{
-                                            "&.MuiCircularProgress-root": {
-                                                width: "26px !important",
-                                                height: "26px !important",
-                                            },
-                                            color: 'black',
-                                        }}
-                                    />
-                                ) : (
-                                    "Submit"
-                                )}
-                            </Button>
-                        </Box>
-                    </>
-                )}
-            </Paper>
-        </Box>
-    );
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mt: 8,
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <Box
+              sx={{
+                textAlign: { xs: "center", sm: "left" },
+                order: { xs: 2, sm: 1 },
+              }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                <Link href="#" underline="hover" color="text.secondary">
+                  Term of use
+                </Link>
+                {" | "}
+                <Link href="#" underline="hover" color="text.secondary">
+                  Privacy policy
+                </Link>
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Box>
+    </ThemeProvider>
+  );
 }
-
-export default Login;
