@@ -113,7 +113,7 @@ const Sidebar = ({ open, setOpen }) => {
         width: open ? '220px' : '50px',
         transition: 'width 0.3s ease',
         height: "100vh",
-        bgcolor: "#46aef5",
+        bgcolor: "white",
         color: "white",
         padding: 2,
         position: "fixed",
@@ -124,14 +124,7 @@ const Sidebar = ({ open, setOpen }) => {
         overflowX: 'hidden'
       }}
     >
-      {data?.length > 0  && (
-					<CSVLink
-						ref={csvLink}
-						data={csvData}
-						filename={`patients-data ${moment().format('DD-MMM-YYYY h:mm A')}.csv`}
-						target="_blank"
-					/>
-				)}
+
       <ConfirmationDialog
         open={confirmationDialog}
         onClose={() => setConfirmationDialog(false)}
@@ -159,17 +152,15 @@ const Sidebar = ({ open, setOpen }) => {
         {/* Sidebar Toggle Button */}
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: open ? "flex-end" : "center" }}>
           <IconButton onClick={() => setOpen(!open)}>
-            <MenuIcon sx={{ color: "white" }} />
+            <MenuIcon sx={{ color: "black" }} />
           </IconButton>
         </Box>
-        {open && <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        {/* {open && <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
           <Box component={'img'} src={Images.sidebarLogo} width={'150px'}>
 
           </Box>
-        </Box>}
-        <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', mt: 2 }}>
-          <PrimaryButton  onClick={() => downloadCsv()}   title={"Export Patient Data"} />
-        </Box>
+        </Box>} */}
+        
         <List>
           {filteredNavigation.map((item) => {
             // Check if the parent is active (either its own path or any child's path)
@@ -189,7 +180,7 @@ const Sidebar = ({ open, setOpen }) => {
                     justifyContent: open ? "flex-start" : "center",
                     paddingX: open ? 2 : 0,
                     paddingY: !open ? 3 : 1,
-                    backgroundColor: isActive ? (open ? "#0b0962" : "transparent") : "transparent",
+                    backgroundColor: isActive ? (open ? "#222222d9" : "transparent") : "transparent",
                     borderRadius: open ? "4px" : "50%",
                     transition: "all 0.3s ease-in-out",
                     '&:hover': {
@@ -197,7 +188,7 @@ const Sidebar = ({ open, setOpen }) => {
                         borderRadius: '50%',
                         width: !open ? '40px' : '100%',
                         height: !open ? '40px' : '100%',
-                        backgroundColor: '#0b0962',
+                        backgroundColor: '#222222d9',
                       })
                     },
                     mt: !open ? 3.5 : 2
@@ -219,7 +210,7 @@ const Sidebar = ({ open, setOpen }) => {
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
-                      backgroundColor: isActive && !open ? "#0b0962" : "transparent",
+                      backgroundColor: isActive && !open ? "#222222d9" : "transparent",
                       borderRadius: "50%",
                       width: !open ? "36px" : "auto",
                       height: !open ? "36px" : "auto",
@@ -317,7 +308,7 @@ const Sidebar = ({ open, setOpen }) => {
           <Box sx={{ display: "flex", gap: 2 }}>
             <LogoutIcon
               className="logout_Icon"
-              sx={{ color: 'white', fontSize: "23px" }}
+              sx={{ color: '#222222d9', fontSize: "23px" }}
             />
             {open ? "Logout" : ''}
           </Box>

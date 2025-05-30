@@ -17,7 +17,7 @@ import {
     Box,
     Paper,
 } from "@mui/material"
-import { handleExportWithComponent } from "../../.lh/src/utils"
+// import { handleExportWithComponent } from "../../.lh/src/utils"
 
 // Function to convert image URL to Base64
 const toBase64 = (url) => {

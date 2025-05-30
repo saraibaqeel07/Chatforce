@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   Box,
   Typography,
@@ -14,69 +14,72 @@ import {
   CssBaseline,
 } from "@mui/material";
 import { Visibility, VisibilityOff, CheckCircle } from "@mui/icons-material";
+import { useForm } from "react-hook-form";
+import ApiServices from "../../../services/Apis";
+
+import { showErrorToast, showPromiseToast, showSuccessToast } from "../../../components/Toaster";
+import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../../Context/AuthContext";
 import { Images } from "../../../assets/images";
+
+// Replace with your actual image paths or imports
+// const Images = {
+//   logo: "https://via.placeholder.com/200x60?text=Logo",
+//   leaves: "https://via.placeholder.com/250x100?text=Leaves",
+// };
 
 // Custom theme
 const theme = createTheme({
   palette: {
-    primary: {
-      main: "#40E0D0", // Teal color for primary elements
-    },
-    secondary: {
-      main: "#4169E1", // Royal blue for secondary elements
-    },
-    background: {
-      default: "#363B59", // Dark purple/navy background
-    },
-    text: {
-      primary: "#FFFFFF",
-      secondary: "#CCCCCC",
-    },
+    primary: { main: "#40E0D0" },
+    secondary: { main: "#4169E1" },
+    background: { default: "#363B59" },
+    text: { primary: "#FFFFFF", secondary: "#CCCCCC" },
   },
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
   },
-  components: {
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          "& .MuiOutlinedInput-root": {
-            "& fieldset": {
-              borderColor: "#6B7280",
-            },
-            "&:hover fieldset": {
-              borderColor: "#40E0D0",
-            },
-            "&.Mui-focused fieldset": {
-              borderColor: "#40E0D0",
-            },
-          },
-          "& .MuiInputLabel-root": {
-            color: "#CCCCCC",
-          },
-          "& .MuiInputBase-input": {
-            color: "#FFFFFF",
-          },
-        },
-      },
-    },
-  },
 });
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isEmailValid, setIsEmailValid] = useState(true);
- 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
+  const { user, setUser } = useContext(AuthContext);
+
+
+  const navigate = useNavigate();
+
+  const onSubmit = async (formData) => {
+    setIsLoading(true);
+    const obj = {
+      email: formData.email,
+      password: formData.password,
+    };
+    try {
+      const result = await ApiServices.Login(obj);
+      if (result.responseCode == 200) {
+        // userLogin(result.data);
+
+
+        setUser(result?.data);
+        localStorage.setItem('user', JSON.stringify(result?.data))
+        showSuccessToast(result.message);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      showErrorToast(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleMouseDownPassword = (event) => {
-    event.preventDefault();
-  };
+  const [showPassword, setShowPassword] = React.useState(false);
+  const handleClickShowPassword = () => setShowPassword((prev) => !prev);
 
   return (
     <ThemeProvider theme={theme}>
@@ -88,7 +91,6 @@ export default function LoginPage() {
           alignItems: "center",
           justifyContent: "center",
           bgcolor: "background.default",
-          position: "relative",
           p: 3,
         }}
       >
@@ -100,141 +102,108 @@ export default function LoginPage() {
             borderRadius: 4,
             p: 4,
             position: "relative",
-            zIndex: 1,
             bgcolor: "rgba(54, 59, 89, 0.9)",
             backdropFilter: "blur(10px)",
           }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              top: 0,
-              left: "-5px",
-              position: "absolute",
-              zIndex: -1,
-            }}
-          >
-            <img src={Images.leaves} width={"250px"} />
+          <Box sx={{ position: "absolute", left: "-5px", zIndex: -1,top:-5 }}>
+            <img src={Images.leaves} width="250px" alt="Leaves" />
           </Box>
+
           <Container maxWidth="xs">
             <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                mb: 4,
-              }}
+              sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 4 }}
             >
-              <img src={Images.logo} width={"200px"} />
-              <Typography
-                variant="subtitle1"
-                color="text.secondary"
-                sx={{ mt: "5px", fontSize: "12px" }}
-              >
+              <img src={Images.logo} width="200px" alt="Logo" />
+              <Typography variant="subtitle1" sx={{ fontSize: 12, color: "text.secondary" }}>
                 Fast & Easy Product Management
               </Typography>
             </Box>
 
             <Typography
               variant="h4"
-              component="h1"
               align="center"
-              sx={{ mb: 4, fontWeight: "medium", fontSize: "22px" }}
+              sx={{ mb: 4, fontWeight: 500, fontSize: 22 }}
             >
               Welcome Back!
             </Typography>
 
-            <Box component="form" sx={{ mt: 2 }}>
+            <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate sx={{ mt: 2 }}>
+              {/* Email Field */}
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Email
               </Typography>
               <TextField
                 fullWidth
-                onChange={(e) => setEmail(e.target.value)}
                 variant="outlined"
                 margin="normal"
+                {...register("email", { required: "Email is required" })}
+                error={!!errors.email}
+                helperText={errors.email?.message}
                 sx={{
                   mb: 2,
                   fieldset: {
-                    outline: "none !important",
                     border: "none !important",
                     borderBottom: "2px solid white !important",
                   },
                   "& .MuiInputBase-input": {
                     padding: "4px !important",
+                    color: "white",
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "white",
                   },
                 }}
                 InputProps={{
-                  endAdornment: isEmailValid && (
+                  endAdornment: (
                     <InputAdornment position="end">
                       <CheckCircle color="primary" />
                     </InputAdornment>
                   ),
                 }}
               />
-              {isEmailValid && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    mt: -2,
-                    mb: 2,
-                    display: "block",
-                    color: "primary.main",
-                  }}
-                >
-                  Perfect!
-                </Typography>
-              )}
 
-              <Typography
-                variant="body2"
-                sx={{ mt: 2, color: "text.secondary" }}
-              >
+              {/* Password Field */}
+              <Typography variant="body2" sx={{ color: "text.secondary", mt: 2 }}>
                 Password
               </Typography>
               <TextField
                 fullWidth
+                type={showPassword ? "text" : "password"}
                 variant="outlined"
                 margin="normal"
-                type={showPassword ? "text" : "password"}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register("password", { required: "Password is required" })}
+                error={!!errors.password}
+                helperText={errors.password?.message}
                 sx={{
+                  mb: 2,
                   fieldset: {
-                    outline: "none !important",
                     border: "none !important",
                     borderBottom: "2px solid white !important",
                   },
                   "& .MuiInputBase-input": {
                     padding: "4px !important",
+                    color: "white",
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "white",
                   },
                 }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton
-                        aria-label="toggle password visibility"
-                        onClick={handleClickShowPassword}
-                        // onMouseDown={handleMouseDownPassword}
-                        edge="end"
-                        sx={{ color: "text.secondary" }}
-                      >
+                      <IconButton onClick={handleClickShowPassword} sx={{ color: "white" }}>
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
                   ),
                 }}
               />
-              <Typography
-                variant="caption"
-                sx={{ mt: -1, mb: 3, display: "block", color: "primary.main" }}
-              >
-                Your password is strong
-              </Typography>
 
+              {/* Submit Button */}
               <Button
                 fullWidth
+                type="submit"
                 variant="contained"
                 color="primary"
                 size="large"
@@ -244,36 +213,29 @@ export default function LoginPage() {
                   py: 1.5,
                   textTransform: "none",
                   fontSize: "1rem",
-                  fontWeight: "medium",
+                  fontWeight: 500,
                   borderRadius: 1,
                 }}
               >
-                Sign in
+                Sign In
               </Button>
 
-              <Box sx={{ textAlign: "center", mt: 1 }}>
-                <Box sx={{fontSize:"14px"}}>   Forget My Password</Box>
-               
-              
-              </Box>
+              {/* <Box sx={{ textAlign: "center", mt: 1 }}>
+                <Typography variant="body2" sx={{ fontSize: 14 }}>
+                  Forget My Password
+                </Typography>
+              </Box> */}
             </Box>
           </Container>
-          <Box
-            sx={{
-              gap: 2,
-              position: "absolute",
-              right: -26,
-              borderRadius: "8px",
-            }}
-          >
+
+          {/* Right-side Buttons */}
+          {/* <Box sx={{ position: "absolute", right: -26, top: 16 }}>
             <Button
               variant="contained"
               color="secondary"
               sx={{
                 boxShadow: "rgb(61 79 140) 0px 3px 8px",
-
-                bgcolor: "hsl(225.99deg 100% 61.37%)",
-                borderRadius: "8px",
+                borderRadius: 2,
                 textTransform: "none",
                 px: 3,
                 py: 1,
@@ -282,16 +244,8 @@ export default function LoginPage() {
             >
               Request An Account
             </Button>
-          </Box>
-          <Box
-            sx={{
-              gap: 2,
-              position: "absolute",
-              right: -26,
-              bottom: 37,
-              boxShadow: "rgb(251 251 251 / 24%) 0px 3px 8px",
-            }}
-          >
+          </Box> */}
+          <Box sx={{ position: "absolute", right: -26, bottom: 37 }}>
             <Button
               variant="outlined"
               sx={{
@@ -311,32 +265,19 @@ export default function LoginPage() {
             </Button>
           </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              mt: 8,
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <Box
-              sx={{
-                textAlign: { xs: "center", sm: "left" },
-                order: { xs: 2, sm: 1 },
-              }}
+          {/* Footer */}
+          <Box sx={{ textAlign: "center", mt: 4 }}>
+            <Typography variant="caption" color="text.secondary">
+              © 2023 GWS. All rights reserved.
+            </Typography>
+            <br />
+            <Link
+              href="#"
+              underline="hover"
+              sx={{ color: "text.secondary", fontSize: "12px", mt: 1 }}
             >
-              <Typography variant="body2" color="text.secondary">
-                <Link href="#" underline="hover" color="text.secondary">
-                  Term of use
-                </Link>
-                {" | "}
-                <Link href="#" underline="hover" color="text.secondary">
-                  Privacy policy
-                </Link>
-              </Typography>
-            </Box>
+              Privacy Policy
+            </Link>
           </Box>
         </Paper>
       </Box>

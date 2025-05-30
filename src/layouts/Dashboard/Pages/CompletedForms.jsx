@@ -19,7 +19,7 @@ import SelectField from "../../../components/select";
 import SendIcon from '@mui/icons-material/Send';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import PatientPDF from "../../../components/pdf";
-import { handleExportWithComponent } from "../../../../.lh/src/utils";
+// import { handleExportWithComponent } from "../../../../.lh/src/utils";
 
 
 const CompletedForms = () => {

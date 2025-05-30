@@ -27,7 +27,7 @@ const DashboardLayout = () => {
         
       >
         {/* Header */}
-        <Box
+        {/* <Box
           component="header"
           sx={{
             position: "sticky",
@@ -37,7 +37,7 @@ const DashboardLayout = () => {
           }}
         >
           <Header />
-        </Box>
+        </Box> */}
 
         {/* Page Content */}
         <Box sx={{ flexGrow: 1, p: "24px",backgroundColor:"#eff6ff" }}>
